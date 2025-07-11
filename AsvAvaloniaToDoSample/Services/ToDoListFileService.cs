@@ -15,10 +15,8 @@ public static class ToDoListFileService
     /// <param name="itemsToSave">The items to save</param>
     public static async Task SaveToFileAsync(IEnumerable<ToDoItem> itemsToSave)
     {
-        // Ensure all directories exists
         Directory.CreateDirectory(Path.GetDirectoryName(_jsonFileName)!);
-
-        // We use a FileStream to write all items to disc
+        
         await using var fs = File.Create(_jsonFileName);
         await JsonSerializer.SerializeAsync(fs, itemsToSave);
     }
@@ -31,13 +29,11 @@ public static class ToDoListFileService
     {
         try
         {
-            // We try to read the saved file and return the ToDoItemsList if successful
             await using var fs = File.OpenRead(_jsonFileName);
             return await JsonSerializer.DeserializeAsync<IEnumerable<ToDoItem>>(fs);
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
-            // In case the file was not found, we simply return null
             return null;
         }
     }
