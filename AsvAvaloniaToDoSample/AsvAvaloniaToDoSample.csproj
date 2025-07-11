@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Asv.Avalonia" Version="1.0.0"/>
+        <PackageReference Include="Avalonia" Version="11.3.2"/>
+        <PackageReference Include="Avalonia.Desktop" Version="11.3.2"/>
+        <PackageReference Include="ObservableCollections" Version="3.3.4"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <EmbeddedResource Update="RS.ru.resx">
+            <LastGenOutput>RS.ru.Designer.cs</LastGenOutput>
+            <Generator>PublicResXFileCodeGenerator</Generator>
+        </EmbeddedResource>
+        <EmbeddedResource Update="RS.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>RS.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="RS.ru.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>RS.ru.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="RS.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>RS.resx</DependentUpon>
+        </Compile>
+        <Compile Update="RS.ru.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>RS.ru.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
+</Project>
