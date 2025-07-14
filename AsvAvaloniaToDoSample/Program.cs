@@ -12,6 +12,7 @@ internal sealed class Program
     {
         var builder = AppHost.CreateBuilder(args);
 
+        // TODO: adjust app path and other settings
         builder
             .UseAvalonia(BuildAvaloniaApp)
             .UseLogToConsoleOnDebug()

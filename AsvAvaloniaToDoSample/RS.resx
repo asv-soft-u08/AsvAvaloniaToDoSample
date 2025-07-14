@@ -33,4 +33,13 @@
     <data name="ToDoListView_AddNewItem" xml:space="preserve">
         <value>Add a new task</value>
     </data>
+    <data name="ToDoListView_RemoveItem" xml:space="preserve">
+        <value>Remove a task</value>
+    </data>
+    <data name="ToDoListCommands_AddDesc" xml:space="preserve">
+        <value>Add a new task</value>
+    </data>
+    <data name="ToDoListCommands_RemoveDesc" xml:space="preserve">
+        <value>Remove a task</value>
+    </data>
 </root>

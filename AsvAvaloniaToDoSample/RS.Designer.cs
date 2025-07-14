@@ -62,5 +62,23 @@ namespace AsvAvaloniaToDoSample {
                 return ResourceManager.GetString("ToDoListView_AddNewItem", resourceCulture);
             }
         }
+        
+        public static string ToDoListView_RemoveItem {
+            get {
+                return ResourceManager.GetString("ToDoListView_RemoveItem", resourceCulture);
+            }
+        }
+        
+        public static string ToDoListCommands_AddDesc {
+            get {
+                return ResourceManager.GetString("ToDoListCommands_AddDesc", resourceCulture);
+            }
+        }
+        
+        public static string ToDoListCommands_RemoveDesc {
+            get {
+                return ResourceManager.GetString("ToDoListCommands_RemoveDesc", resourceCulture);
+            }
+        }
     }
 }

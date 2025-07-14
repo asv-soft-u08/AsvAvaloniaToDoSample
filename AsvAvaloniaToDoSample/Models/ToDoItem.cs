@@ -1,23 +1,25 @@
+using System.Text.Json.Serialization;
+
 namespace AsvAvaloniaToDoSample.Models;
 
-/// <summary>
-///     This is our Model for a simple ToDoItem.
-/// </summary>
 public class ToDoItem
 {
-    public ToDoItem(string? content, bool isChecked)
+    [JsonConstructor]
+    public ToDoItem(string id, string content, bool isChecked)
     {
+        Id = id;
         Content = content;
         IsChecked = isChecked;
     }
 
-    /// <summary>
-    ///     Gets or sets the checked status of each item
-    /// </summary>
+    public ToDoItem(string content, bool isChecked)
+        : this(Guid.NewGuid().ToString(), content, isChecked)
+    {
+    }
+
+    public string Id { get; set; }
+
     public bool IsChecked { get; set; }
 
-    /// <summary>
-    ///     Gets or sets the content of the to-do item
-    /// </summary>
-    public string? Content { get; set; }
+    public string Content { get; set; }
 }

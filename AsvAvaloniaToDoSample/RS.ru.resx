@@ -33,4 +33,13 @@
     <data name="ToDoListView_Title" xml:space="preserve">
         <value>Список задач</value>
     </data>
+    <data name="ToDoListView_RemoveItem" xml:space="preserve">
+        <value>Удалить задачу</value>
+    </data>
+    <data name="ToDoListCommands_AddDesc" xml:space="preserve">
+        <value>Добавляет новую задачу</value>
+    </data>
+    <data name="ToDoListCommands_RemoveDesc" xml:space="preserve">
+        <value>Удаляет задачу</value>
+    </data>
 </root>

@@ -25,7 +25,7 @@
                                       Content="{Binding Content}" />
 
                             <Button Grid.Column="1"
-                                    Command="{Binding #Root.((toDoList:ToDoListViewModel)DataContext).RemoveItemCommand}"
+                                    Command="{Binding #Root.((toDoList:ToDoListViewModel)DataContext).RemoveItemReactiveCommand}"
                                     CommandParameter="{Binding .}">
                                 <PathIcon Data="{DynamicResource DeleteIconData}"
                                           Height="15"
@@ -41,12 +41,12 @@
                  Text="{Binding NewItemContent.Value}"
                  Watermark="{x:Static asvAvaloniaToDoSample:RS.ToDoListView_AddNewItem}">
             <TextBox.InnerRightContent>
-                <Button Command="{Binding AddItemCommand}">
+                <Button Command="{Binding AddItemReactiveCommand}">
                     <PathIcon Data="{DynamicResource AcceptIconData}" Foreground="Green" />
                 </Button>
             </TextBox.InnerRightContent>
             <TextBox.KeyBindings>
-                <KeyBinding Gesture="Enter" Command="{Binding AddItemCommand}" />
+                <KeyBinding Gesture="Enter" Command="{Binding AddItemReactiveCommand}" />
             </TextBox.KeyBindings>
         </TextBox>
     </Grid>

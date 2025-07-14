@@ -6,8 +6,6 @@ using System.Reflection;
 using Asv.Avalonia;
 using Asv.Cfg;
 using Asv.Common;
-using AsvAvaloniaToDoSample.Pages.ToDoList;
-using AsvAvaloniaToDoSample.Services;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -24,7 +22,6 @@ public class App : Application, IContainerHost, IShellHost
     private readonly CompositionHost _container;
     private readonly Subject<IShell> _onShellLoaded = new();
 
-    private bool _canClose;
     private IShell _shell;
 
     public App()
@@ -118,7 +115,7 @@ public class App : Application, IContainerHost, IShellHost
         AvaloniaXamlLoader.Load(this);
     }
 
-    public override async void OnFrameworkInitializationCompleted()
+    public override void OnFrameworkInitializationCompleted()
     {
         if (Design.IsDesignMode)
         {
@@ -128,8 +125,6 @@ public class App : Application, IContainerHost, IShellHost
         {
             Shell = _container.GetExport<IShell>(DesktopShellViewModel.ShellId);
             if (desktop.MainWindow is TopLevel topLevel) TopLevel = topLevel;
-
-            desktop.ShutdownRequested += DesktopOnShutdownRequested;
         }
         else if (Current?.ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
@@ -145,35 +140,5 @@ public class App : Application, IContainerHost, IShellHost
 #if DEBUG
         this.AttachDevTools();
 #endif
-
-        await LoadToDoTasksAsync();
-    }
-
-    private async Task LoadToDoTasksAsync()
-    {
-        var itemsLoaded = await ToDoListFileService.LoadFromFileAsync();
-        var todoListViewModel = (ToDoListViewModel)Shell.Pages
-            .First(p => p.Id == ToDoListViewModel.PageId);
-        var loggerFactory = _container.GetExport<ILoggerFactory>();
-
-        if (itemsLoaded is not null)
-            foreach (var item in itemsLoaded)
-                todoListViewModel.ToDoItems.Add(new ToDoItemViewModel(item, loggerFactory));
-    }
-
-    private async void DesktopOnShutdownRequested(object? sender, ShutdownRequestedEventArgs e)
-    {
-        e.Cancel = !_canClose;
-
-        if (!_canClose)
-        {
-            var todoListViewModel = (ToDoListViewModel)Shell.Pages
-                .First(p => p.Id == ToDoListViewModel.PageId);
-            await ToDoListFileService.SaveToFileAsync(
-                todoListViewModel.ToDoItems.Select(i => i.GetToDoItem()));
-
-            _canClose = true;
-            if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop) desktop.Shutdown();
-        }
     }
 }

@@ -1,40 +1,40 @@
+using System.Composition;
 using System.Text.Json;
+using Asv.Avalonia;
 using AsvAvaloniaToDoSample.Models;
 
 namespace AsvAvaloniaToDoSample.Services;
 
-public static class ToDoListFileService
+[Export(typeof(IToDoListFileService))]
+[Shared]
+public class ToDoListFileService : IToDoListFileService
 {
-    private static readonly string _jsonFileName =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Avalonia.SimpleToDoList", "MyToDoList.txt");
+    private readonly string _dataFilePath;
 
-    /// <summary>
-    ///     Stores the given items into a file on disc
-    /// </summary>
-    /// <param name="itemsToSave">The items to save</param>
-    public static async Task SaveToFileAsync(IEnumerable<ToDoItem> itemsToSave)
+    [ImportingConstructor]
+    public ToDoListFileService(IAppPath appPath)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(_jsonFileName)!);
-        
-        await using var fs = File.Create(_jsonFileName);
-        await JsonSerializer.SerializeAsync(fs, itemsToSave);
+        _dataFilePath = Path.Join(appPath.UserDataFolder, "MyToDoList.json");
+        Console.WriteLine(_dataFilePath);
     }
 
-    /// <summary>
-    ///     Loads the file from disc and returns the items stored inside
-    /// </summary>
-    /// <returns>An IEnumerable of items loaded or null in case the file was not found</returns>
-    public static async Task<IEnumerable<ToDoItem>?> LoadFromFileAsync()
+    public async ValueTask SaveToFileAsync(IEnumerable<ToDoItem> itemsToSave, CancellationToken cancellationToken)
+    {
+        await using var fs = File.Create(_dataFilePath);
+        await JsonSerializer.SerializeAsync(fs, itemsToSave, cancellationToken: cancellationToken);
+    }
+
+    public async ValueTask<IEnumerable<ToDoItem>> LoadFromFileAsync(CancellationToken cancellationToken)
     {
         try
         {
-            await using var fs = File.OpenRead(_jsonFileName);
-            return await JsonSerializer.DeserializeAsync<IEnumerable<ToDoItem>>(fs);
+            await using var fs = File.OpenRead(_dataFilePath);
+            return await JsonSerializer.DeserializeAsync<IEnumerable<ToDoItem>>(fs,
+                cancellationToken: cancellationToken) ?? [];
         }
         catch (Exception e) when (e is FileNotFoundException or DirectoryNotFoundException)
         {
-            return null;
+            return [];
         }
     }
 }
