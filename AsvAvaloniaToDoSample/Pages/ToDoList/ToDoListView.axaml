@@ -21,8 +21,9 @@
                 <ItemsControl.ItemTemplate>
                     <DataTemplate DataType="toDoList:ToDoItemViewModel">
                         <Grid ColumnDefinitions="*, Auto">
-                            <CheckBox IsChecked="{Binding IsChecked}"
-                                      Content="{Binding Content}" />
+                            <CheckBox
+                                IsChecked="{CompiledBinding IsChecked.ViewValue.Value}"
+                                Content="{Binding Content}" />
 
                             <Button Grid.Column="1"
                                     Command="{Binding #Root.((toDoList:ToDoListViewModel)DataContext).RemoveItemReactiveCommand}"
@@ -38,7 +39,7 @@
         </ScrollViewer>
 
         <TextBox Grid.Row="2"
-                 Text="{Binding NewItemContent.Value}"
+                 Text="{CompiledBinding NewItemContentHistorical.ViewValue.Value}"
                  Watermark="{x:Static asvAvaloniaToDoSample:RS.ToDoListView_AddNewItem}">
             <TextBox.InnerRightContent>
                 <Button Command="{Binding AddItemReactiveCommand}">
