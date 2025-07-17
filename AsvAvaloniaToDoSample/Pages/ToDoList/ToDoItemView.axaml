@@ -1,0 +1,24 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:toDoList="clr-namespace:AsvAvaloniaToDoSample.Pages.ToDoList"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="100"
+             x:Class="AsvAvaloniaToDoSample.Pages.ToDoList.ToDoItemView"
+             x:DataType="toDoList:ToDoItemViewModel">
+    <Design.DataContext>
+        <toDoList:ToDoItemViewModel />
+    </Design.DataContext>
+
+    <Grid ColumnDefinitions="*, Auto">
+        <CheckBox
+            IsChecked="{CompiledBinding IsChecked.ViewValue.Value}"
+            Content="{Binding Content}" />
+
+        <Button Grid.Column="1"
+                Command="{Binding RemoveItem}"
+                CommandParameter="{Binding .}">
+            <PathIcon Data="{DynamicResource DeleteIconData}" Height="15" Foreground="Red" />
+        </Button>
+    </Grid>
+</UserControl>

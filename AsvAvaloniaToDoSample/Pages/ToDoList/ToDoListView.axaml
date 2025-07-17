@@ -11,28 +11,14 @@
         <toDoList:ToDoListViewModel />
     </Design.DataContext>
 
-    <Grid RowDefinitions="Auto, *, Auto"
-          x:Name="Root">
-
+    <Grid RowDefinitions="Auto, *, Auto">
         <TextBlock Text="{x:Static asvAvaloniaToDoSample:RS.ToDoListView_ListTitle}" Classes="h1" />
 
         <ScrollViewer Grid.Row="1">
             <ItemsControl ItemsSource="{Binding ToDoItems}">
                 <ItemsControl.ItemTemplate>
-                    <DataTemplate DataType="toDoList:ToDoItemViewModel">
-                        <Grid ColumnDefinitions="*, Auto">
-                            <CheckBox
-                                IsChecked="{CompiledBinding IsChecked.ViewValue.Value}"
-                                Content="{Binding Content}" />
-
-                            <Button Grid.Column="1"
-                                    Command="{Binding #Root.((toDoList:ToDoListViewModel)DataContext).RemoveItemReactiveCommand}"
-                                    CommandParameter="{Binding .}">
-                                <PathIcon Data="{DynamicResource DeleteIconData}"
-                                          Height="15"
-                                          Foreground="Red" />
-                            </Button>
-                        </Grid>
+                    <DataTemplate>
+                        <toDoList:ToDoItemView />
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>
             </ItemsControl>
@@ -42,12 +28,12 @@
                  Text="{CompiledBinding NewItemContentHistorical.ViewValue.Value}"
                  Watermark="{x:Static asvAvaloniaToDoSample:RS.ToDoListView_AddNewItem}">
             <TextBox.InnerRightContent>
-                <Button Command="{Binding AddItemReactiveCommand}">
+                <Button Command="{Binding AddItem}">
                     <PathIcon Data="{DynamicResource AcceptIconData}" Foreground="Green" />
                 </Button>
             </TextBox.InnerRightContent>
             <TextBox.KeyBindings>
-                <KeyBinding Gesture="Enter" Command="{Binding AddItemReactiveCommand}" />
+                <KeyBinding Gesture="Enter" Command="{Binding AddItem}" />
             </TextBox.KeyBindings>
         </TextBox>
     </Grid>

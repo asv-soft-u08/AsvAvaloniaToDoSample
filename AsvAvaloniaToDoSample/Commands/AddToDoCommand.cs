@@ -30,19 +30,19 @@ public class AddToDoCommand : ContextCommand<ToDoListViewModel, ActionArg>
         var toDoItemDict = arg.Value.AsDictionary();
         var toDoItem = new ToDoItem(
             arg.SubjectId,
-            toDoItemDict["Content"].AsString(),
-            toDoItemDict["IsChecked"].AsBool());
+            toDoItemDict[nameof(ToDoItem.Content)].AsString(),
+            toDoItemDict[nameof(ToDoItem.IsChecked)].AsBool());
 
         switch (arg.Action)
         {
             case ActionArg.Kind.Add:
             {
-                await context.AddItem(toDoItem, cancel);
+                await context.AddItemCmdImpl(toDoItem, cancel);
                 return new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Remove);
             }
             case ActionArg.Kind.Remove:
             {
-                await context.RemoveItem(toDoItem.Id, cancel);
+                await context.RemoveItemCmdImpl(toDoItem.Id, cancel);
                 return new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Add);
             }
             default: return null;

@@ -16,16 +16,23 @@ public class ToDoItemViewModel : RoutableViewModel
     private readonly string _itemId;
 
     public ToDoItemViewModel()
-        : this(new ToDoItem("Hello", false), NullLoggerFactory.Instance)
+        : this(
+            new ToDoItem("Hello", false),
+            new ReactiveCommand<ToDoItemViewModel>(),
+            NullLoggerFactory.Instance)
     {
         DesignTime.ThrowIfNotDesignMode();
     }
 
-    public ToDoItemViewModel(ToDoItem toDoItem, ILoggerFactory loggerFactory)
+    public ToDoItemViewModel(
+        ToDoItem toDoItem,
+        ReactiveCommand<ToDoItemViewModel> removeItem,
+        ILoggerFactory loggerFactory)
         : base(new NavigationId(PageId, toDoItem.Id), loggerFactory)
     {
         _itemId = toDoItem.Id;
 
+        RemoveItem = removeItem;
         Content = new BindableReactiveProperty<string>(toDoItem.Content).DisposeItWith(Disposable);
 
         _isChecked = new ReactiveProperty<bool>(toDoItem.IsChecked).DisposeItWith(Disposable);
@@ -35,10 +42,12 @@ public class ToDoItemViewModel : RoutableViewModel
             }
             .DisposeItWith(Disposable);
         IsChecked
-            .ViewValue.SubscribeAwait(async (_, _) => await Rise(new ToDoItemChangedEvent(this)))
+            .ViewValue
+            .SubscribeAwait(async (_, _) => await Rise(new ToDoItemChangedEvent(this)))
             .DisposeItWith(Disposable);
     }
 
+    public ReactiveCommand<ToDoItemViewModel> RemoveItem { get; set; }
     public BindableReactiveProperty<string> Content { get; set; }
     public HistoricalBoolProperty IsChecked { get; }
 

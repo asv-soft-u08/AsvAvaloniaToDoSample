@@ -5,7 +5,6 @@ using AsvAvaloniaToDoSample.Commands;
 using AsvAvaloniaToDoSample.Models;
 using AsvAvaloniaToDoSample.Pages.ToDoList.RoutedEvents;
 using AsvAvaloniaToDoSample.Services;
-using Avalonia.Threading;
 using Material.Icons;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
@@ -55,28 +54,30 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
 
         _newItemContentText = new ReactiveProperty<string?>().DisposeItWith(Disposable);
         NewItemContentHistorical = new HistoricalStringProperty(
-            $"{PageId}{nameof(NewItemContentHistorical)}",
+            nameof(NewItemContentHistorical),
             _newItemContentText,
             loggerFactory)
         {
             Parent = this
         }.DisposeItWith(Disposable);
 
+        // _toDoItems.SetRoutableParent(this).DisposeItWith(Disposable);
+        // _toDoItems.DisposeRemovedItems().DisposeItWith(Disposable);
         ToDoItems = _toDoItems.ToNotifyCollectionChangedSlim().DisposeItWith(Disposable);
 
-        RemoveItemReactiveCommand = new ReactiveCommand<ToDoItemViewModel>(async (itemViewModel, ct) =>
+        RemoveItem = new ReactiveCommand<ToDoItemViewModel>(async (itemViewModel, ct) =>
         {
             var toDoItem = itemViewModel.GetToDoItem();
             var toDoItemDict = new DictArg
             {
-                ["Content"] = new StringArg(toDoItem.Content),
-                ["IsChecked"] = new BoolArg(toDoItem.IsChecked)
+                [nameof(ToDoItem.Content)] = new StringArg(toDoItem.Content),
+                [nameof(ToDoItem.IsChecked)] = new BoolArg(toDoItem.IsChecked)
             };
             var arg = new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Remove);
             await this.ExecuteCommand(RemoveToDoCommand.Id, arg, ct);
         }).DisposeItWith(Disposable);
 
-        AddItemReactiveCommand = new ReactiveCommand(async (_, ct) =>
+        AddItem = new ReactiveCommand(async (_, ct) =>
         {
             if (string.IsNullOrWhiteSpace(NewItemContentHistorical.ViewValue.Value)) return;
 
@@ -86,8 +87,8 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
                 false);
             var toDoItemDict = new DictArg
             {
-                ["Content"] = new StringArg(toDoItem.Content),
-                ["IsChecked"] = new BoolArg(toDoItem.IsChecked)
+                [nameof(ToDoItem.Content)] = new StringArg(toDoItem.Content),
+                [nameof(ToDoItem.IsChecked)] = new BoolArg(toDoItem.IsChecked)
             };
             var arg = new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Add);
 
@@ -104,8 +105,8 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
 
     public HistoricalStringProperty NewItemContentHistorical { get; }
 
-    public ReactiveCommand<ToDoItemViewModel> RemoveItemReactiveCommand { get; set; }
-    public ReactiveCommand AddItemReactiveCommand { get; set; }
+    public ReactiveCommand<ToDoItemViewModel> RemoveItem { get; set; }
+    public ReactiveCommand AddItem { get; set; }
 
     public override IExportInfo Source => SystemModule.Instance;
 
@@ -123,35 +124,29 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
     private async Task InitializeData()
     {
         var todos = await _toDoListFileService.LoadFromFileAsync(CancellationToken.None);
-        await Dispatcher.UIThread.InvokeAsync(() =>
-        {
-            foreach (var todo in todos) AddItemWithoutSaving(todo);
-        });
+        foreach (var todo in todos) AddItemWithoutSaving(todo);
     }
 
     internal void AddItemWithoutSaving(ToDoItem toDoItem)
     {
-        var vm = new ToDoItemViewModel(toDoItem, _loggerFactory)
+        var vm = new ToDoItemViewModel(toDoItem, RemoveItem, _loggerFactory)
             .SetRoutableParent(this)
             .DisposeItWith(Disposable);
         ToDoItems.Add(vm);
     }
 
-    internal async Task AddItem(ToDoItem toDoItem, CancellationToken cancellationToken)
+    internal async Task AddItemCmdImpl(ToDoItem toDoItem, CancellationToken cancellationToken)
     {
         AddItemWithoutSaving(toDoItem);
         await SaveToDoTasks(cancellationToken);
     }
 
-    internal async Task RemoveItem(string itemId, CancellationToken cancellationToken)
+    internal async Task RemoveItemCmdImpl(string itemId, CancellationToken cancellationToken)
     {
         var vmToDelete = ToDoItems.FirstOrDefault(i => i.GetToDoItem().Id == itemId);
         if (vmToDelete is null) return;
 
         ToDoItems.Remove(vmToDelete);
-
-        // remove and dispose item, but this cause problems with historical IsChecked field 
-        // Disposable.Remove(vmToDelete);
 
         await SaveToDoTasks(cancellationToken);
     }
@@ -166,7 +161,6 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
     {
         yield return NewItemContentHistorical;
 
-        // do we need this?
         foreach (var toDoItem in ToDoItems) yield return toDoItem;
     }
 
