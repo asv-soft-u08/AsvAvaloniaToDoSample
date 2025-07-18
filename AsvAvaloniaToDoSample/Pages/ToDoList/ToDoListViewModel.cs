@@ -97,9 +97,7 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
             NewItemContentHistorical.ViewValue.Value = null;
             await this.ExecuteCommand(AddToDoCommand.Id, arg, ct);
         }).DisposeItWith(Disposable);
-
-        // _toDoItems.SetRoutableParent(this).DisposeItWith(Disposable);
-        // _toDoItems.DisposeRemovedItems().DisposeItWith(Disposable);
+        
         _toDoItemsView = _toDoListService.Items.CreateView(item =>
             {
                 return new ToDoItemViewModel(item, RemoveItem, _loggerFactory)
@@ -107,6 +105,8 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
                     .DisposeItWith(Disposable);
             })
             .DisposeItWith(Disposable);
+        // _toDoItemsView.SetRoutableParent(this).DisposeItWith(Disposable);
+        // _toDoItemsView.DisposeMany(Disposable);
         ToDoItems = _toDoItemsView.ToNotifyCollectionChanged().DisposeItWith(Disposable);
 
         _toDoListService.RefreshAsync(CancellationToken.None)
