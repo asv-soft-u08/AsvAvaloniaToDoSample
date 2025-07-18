@@ -22,11 +22,11 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
     private readonly ILoggerFactory _loggerFactory;
 
     private readonly ReactiveProperty<string?> _newItemContentText;
-    private readonly ObservableList<ToDoItemViewModel> _toDoItems = [];
-    private readonly IToDoListFileService _toDoListFileService;
+    private readonly ISynchronizedView<ToDoItem, ToDoItemViewModel> _toDoItemsView;
+    private readonly IToDoListService _toDoListService;
 
     public ToDoListViewModel()
-        : this(DesignTime.CommandService, NullLoggerFactory.Instance, NullToDoListFileService.Instance)
+        : this(DesignTime.CommandService, NullLoggerFactory.Instance, NullToDoListService.Instance)
     {
         DesignTime.ThrowIfNotDesignMode();
 
@@ -36,21 +36,27 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
             new("hhh", false),
             new("kkk ppp", true)
         };
-        foreach (var testToDoItem in testToDoItems) AddItemWithoutSaving(testToDoItem);
+        foreach (var testToDoItem in testToDoItems)
+        {
+            var vm = new ToDoItemViewModel(testToDoItem, RemoveItem, _loggerFactory)
+                .SetRoutableParent(this)
+                .DisposeItWith(Disposable);
+            ToDoItems.Add(vm);
+        }
     }
 
     [ImportingConstructor]
     public ToDoListViewModel(
         ICommandService cmd,
         ILoggerFactory loggerFactory,
-        IToDoListFileService toDoListFileService
+        IToDoListService toDoListService
     )
         : base(PageId, cmd, loggerFactory)
     {
         Title = RS.ToDoListView_Title;
 
         _loggerFactory = loggerFactory;
-        _toDoListFileService = toDoListFileService;
+        _toDoListService = toDoListService;
 
         _newItemContentText = new ReactiveProperty<string?>().DisposeItWith(Disposable);
         NewItemContentHistorical = new HistoricalStringProperty(
@@ -60,10 +66,6 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
         {
             Parent = this
         }.DisposeItWith(Disposable);
-
-        // _toDoItems.SetRoutableParent(this).DisposeItWith(Disposable);
-        // _toDoItems.DisposeRemovedItems().DisposeItWith(Disposable);
-        ToDoItems = _toDoItems.ToNotifyCollectionChangedSlim().DisposeItWith(Disposable);
 
         RemoveItem = new ReactiveCommand<ToDoItemViewModel>(async (itemViewModel, ct) =>
         {
@@ -82,7 +84,6 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
             if (string.IsNullOrWhiteSpace(NewItemContentHistorical.ViewValue.Value)) return;
 
             var toDoItem = new ToDoItem(
-                Guid.NewGuid().ToString(),
                 NewItemContentHistorical.ViewValue.Value,
                 false);
             var toDoItemDict = new DictArg
@@ -97,7 +98,18 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
             await this.ExecuteCommand(AddToDoCommand.Id, arg, ct);
         }).DisposeItWith(Disposable);
 
-        InitializeData()
+        // _toDoItems.SetRoutableParent(this).DisposeItWith(Disposable);
+        // _toDoItems.DisposeRemovedItems().DisposeItWith(Disposable);
+        _toDoItemsView = _toDoListService.Items.CreateView(item =>
+            {
+                return new ToDoItemViewModel(item, RemoveItem, _loggerFactory)
+                    .SetRoutableParent(this)
+                    .DisposeItWith(Disposable);
+            })
+            .DisposeItWith(Disposable);
+        ToDoItems = _toDoItemsView.ToNotifyCollectionChanged().DisposeItWith(Disposable);
+
+        _toDoListService.RefreshAsync(CancellationToken.None)
             .SafeFireAndForget(ex => { Logger.LogError(ex, "Error to load tasks"); });
     }
 
@@ -112,49 +124,13 @@ public class ToDoListViewModel : PageViewModel<ToDoListViewModel>
 
     protected override async ValueTask InternalCatchEvent(AsyncRoutedEvent e)
     {
-        if (e is ToDoItemChangedEvent { Source: ToDoItemViewModel })
+        if (e is ToDoItemChangedEvent { Source: ToDoItemViewModel } toDoItemChanged)
         {
-            await SaveToDoTasks(CancellationToken.None);
+            await _toDoListService.UpdateAsync(toDoItemChanged.NewToDoItem, CancellationToken.None);
             e.IsHandled = true;
         }
 
         await base.InternalCatchEvent(e);
-    }
-
-    private async Task InitializeData()
-    {
-        var todos = await _toDoListFileService.LoadFromFileAsync(CancellationToken.None);
-        foreach (var todo in todos) AddItemWithoutSaving(todo);
-    }
-
-    internal void AddItemWithoutSaving(ToDoItem toDoItem)
-    {
-        var vm = new ToDoItemViewModel(toDoItem, RemoveItem, _loggerFactory)
-            .SetRoutableParent(this)
-            .DisposeItWith(Disposable);
-        ToDoItems.Add(vm);
-    }
-
-    internal async Task AddItemCmdImpl(ToDoItem toDoItem, CancellationToken cancellationToken)
-    {
-        AddItemWithoutSaving(toDoItem);
-        await SaveToDoTasks(cancellationToken);
-    }
-
-    internal async Task RemoveItemCmdImpl(string itemId, CancellationToken cancellationToken)
-    {
-        var vmToDelete = ToDoItems.FirstOrDefault(i => i.GetToDoItem().Id == itemId);
-        if (vmToDelete is null) return;
-
-        ToDoItems.Remove(vmToDelete);
-
-        await SaveToDoTasks(cancellationToken);
-    }
-
-    private async Task SaveToDoTasks(CancellationToken cancellationToken)
-    {
-        var todos = ToDoItems.Select(i => i.GetToDoItem());
-        await _toDoListFileService.SaveToFileAsync(todos, cancellationToken);
     }
 
     public override IEnumerable<IRoutable> GetRoutableChildren()

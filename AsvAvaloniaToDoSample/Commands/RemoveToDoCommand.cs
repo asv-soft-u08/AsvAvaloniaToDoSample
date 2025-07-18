@@ -1,12 +1,13 @@
+using System.Composition;
 using Asv.Avalonia;
 using AsvAvaloniaToDoSample.Models;
-using AsvAvaloniaToDoSample.Pages.ToDoList;
+using AsvAvaloniaToDoSample.Services;
 using Material.Icons;
 
 namespace AsvAvaloniaToDoSample.Commands;
 
 [ExportCommand]
-public class RemoveToDoCommand : ContextCommand<ToDoListViewModel, ActionArg>
+public class RemoveToDoCommand : ContextCommand<IRoutable, ActionArg>
 {
     public const string Id = $"{BaseId}.todo.remove";
 
@@ -20,10 +21,18 @@ public class RemoveToDoCommand : ContextCommand<ToDoListViewModel, ActionArg>
         Source = SystemModule.Instance
     };
 
+    private readonly IToDoListService _toDoListService;
+
+    [ImportingConstructor]
+    public RemoveToDoCommand(IToDoListService toDoListService)
+    {
+        _toDoListService = toDoListService;
+    }
+
     public override ICommandInfo Info => StaticInfo;
 
     public override async ValueTask<ActionArg?> InternalExecute(
-        ToDoListViewModel context, ActionArg arg, CancellationToken cancel)
+        IRoutable context, ActionArg arg, CancellationToken cancel)
     {
         if (arg.Value is null || arg.SubjectId is null) return null;
 
@@ -37,12 +46,12 @@ public class RemoveToDoCommand : ContextCommand<ToDoListViewModel, ActionArg>
         {
             case ActionArg.Kind.Add:
             {
-                await context.AddItemCmdImpl(toDoItem, cancel);
+                await _toDoListService.AddAsync(toDoItem, cancel);
                 return new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Remove);
             }
             case ActionArg.Kind.Remove:
             {
-                await context.RemoveItemCmdImpl(toDoItem.Id, cancel);
+                await _toDoListService.RemoveAsync(toDoItem.Id, cancel);
                 return new ActionArg(toDoItem.Id, toDoItemDict, ActionArg.Kind.Add);
             }
             default: return null;

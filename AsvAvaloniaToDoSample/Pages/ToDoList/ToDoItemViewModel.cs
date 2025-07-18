@@ -43,7 +43,7 @@ public class ToDoItemViewModel : RoutableViewModel
             .DisposeItWith(Disposable);
         IsChecked
             .ViewValue
-            .SubscribeAwait(async (_, _) => await Rise(new ToDoItemChangedEvent(this)))
+            .SubscribeAwait(async (_, _) => await Rise(new ToDoItemChangedEvent(this, GetToDoItem())))
             .DisposeItWith(Disposable);
     }
 
